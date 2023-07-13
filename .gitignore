@@ -1,18 +1,42 @@
-# Build and Release Folders
-bin-debug/
-bin-release/
-[Oo]bj/
-[Bb]in/
+import requests
+import telebot
 
-# Other files and folders
-.settings/
+# Установите свой токен бота Telegram
+bot_token = 'YOUR_BOT_TOKEN'
+# Установите свой API-ключ для получения погодных данных (например, от OpenWeatherMap)
+weather_api_key = 'YOUR_WEATHER_API_KEY'
+# Установите город для получения прогноза погоды
+city = 'YOUR_CITY'
 
-# Executables
-*.swf
-*.air
-*.ipa
-*.apk
+# Создание объекта бота Telegram
+bot = telebot.TeleBot(bot_token)
 
-# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
-# should NOT be excluded as they contain compiler settings and other important
-# information for Eclipse / Flash Builder.
+# Функция для получения прогноза погоды
+def get_weather_forecast():
+    # Формирование URL для запроса прогноза погоды
+    url = f'http://api.openweathermap.org/data/2.5/weather?q={city}&appid={weather_api_key}&units=metric'
+    
+    # Отправка запроса на API для получения данных о погоде
+    response = requests.get(url)
+    data = response.json()
+    
+    # Извлечение необходимых данных из ответа
+    weather_description = data['weather'][0]['description']
+    temperature = data['main']['temp']
+    
+    # Составление сообщения с прогнозом погоды
+    forecast_message = f'Погода в городе {city}:\n\nОписание: {weather_description}\nТемпература: {temperature}°C'
+    
+    return forecast_message
+
+# Функция для обработки команды /weather
+@bot.message_handler(commands=['weather'])
+def send_weather_forecast(message):
+    # Получение прогноза погоды
+    forecast = get_weather_forecast()
+    
+    # Отправка прогноза погоды пользователю
+    bot.send_message(message.chat.id, forecast)
+
+# Запуск бота
+bot.polling()
